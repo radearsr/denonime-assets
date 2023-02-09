@@ -79,11 +79,14 @@ app.post("/upload", upload.array("files"), (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  const ipAddress = req.header("x-forwarded-for") || req.socket.remoteAddress;
+  let ipAddress = req.header("x-forwarded-for") || req.socket.remoteAddress;
+  if (ipAddress.includes(",")) {
+    [ipAddress] = ipAddress.split(",");
+  }
   res.send(`
     <center>
       <h1>Welcome To Denonime Asset Manager</h1>
-      <h4>Client From ${ipAddress}</h4>
+      <h4>Accessed From ${ipAddress}</h4>
     <center>
   `);
 });
