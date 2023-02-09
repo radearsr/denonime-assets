@@ -1,0 +1,19 @@
+name: Continues Deployment
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Remote Cpanel
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            ls -al
