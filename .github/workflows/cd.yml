@@ -17,4 +17,5 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            ls -al
+            cd assets.deyapro.com
+            ls -a
