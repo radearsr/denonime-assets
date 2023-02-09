@@ -79,7 +79,13 @@ app.post("/upload", upload.array("files"), (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  const ipAddress = req.header("x-forwarded-for") || req.socket.remoteAddress;
+  res.send(`
+    <center>
+      <h1>Welcome To Denonime Asset Manager</h1>
+      <h4>Client From ${ipAddress}</h4>
+    <center>
+  `);
 });
 
 app.listen(port, () => {

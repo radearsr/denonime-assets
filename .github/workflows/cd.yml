@@ -17,8 +17,10 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd assets.deyapro.com
+            cd ~/assets.deyapro.com
             git fetch
             git reset --hard HEAD
             git merge origin/main
             git log -1
+            ~/nodevenv/assets.deyapro.com/16/bin/npm install
+            touch tmp/restart.txt
