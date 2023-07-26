@@ -1,24 +1,11 @@
 const express = require("express");
 const path = require("path");
-const multer = require("multer");
 const axios = require("axios");
 const fs = require("fs");
 
 const app = express();
 
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/images");
-  },
-  filename: (req, file, cb) => {
-    const [, ext] = file.mimetype.split("/");
-    cb(null, `$img-${Date.now()}.${ext}`);
-  },
-});
-const upload = multer({
-  storage: multerStorage,
-});
-const port = 3000;
+const port = 3030;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -28,7 +15,6 @@ app.use("/static", express.static(path.join(__dirname, "public")));
 const downloadImage = async (link, filename) => {
   const directory = path.resolve(__dirname, "public/images", `${filename}.jpg`);
   const writer = fs.createWriteStream(directory);
-  console.log(writer);
   const response = await axios({
     url: link,
     method: "GET",
@@ -37,43 +23,38 @@ const downloadImage = async (link, filename) => {
   response.data.pipe(writer);
 
   return new Promise((resolve, reject) => {
-    writer.on("finish", resolve);
+    writer.on("finish", resolve(`${filename}.jpg`));
     writer.on("error", reject);
   });
 };
 
-app.post("/downloader", async (req, res) => {
+app.post("/upload", async (req, res) => {
   try {
-    console.log(req.headers.host);
-    const filename = `img-${Date.now()}`;
-    await downloadImage(req.body.link, filename);
+    const { poster, title } = req.body;
+    if (!poster || !title) {
+      res.statusCode = 400;
+      return res.send({
+        status: "fail",
+        message: "poster dan title tidak boleh kosong",
+      }); 
+    } 
+    const uploadedFilename = await downloadImage(req.body.poster, req.body.title);
+    // console.log(uploadedFilename);
+    const protocol = process.env.NODE_ENV === "production" ? process.env.PROTOKOL_PROD : process.env.PROTOKOL_DEV; 
+    res.statusCode = 201;
     res.json({
       status: "success",
       data: {
-        filename,
-        access: `${req.headers.host}/static/images/${filename}.jpg`
+        filename: uploadedFilename,
+        access: `${protocol}://${req.headers.host}/static/images/${uploadedFilename}`
       },
     });
   } catch (error) {
+    // console.log(error);
+    res.statusCode = 500;
     res.json({
       status: "error",
-      data: error,
-    });   
-  }
-});
-
-app.post("/upload", upload.array("files"), (req, res) => {
-  try {
-    res.json({
-      status: "success",
-      data: {
-        filename: req.files.filename
-      },
-    });
-  } catch (error) {
-    res.json({
-      status: "error",
-      error,
+      message: error.message,
     });
   }
 });
